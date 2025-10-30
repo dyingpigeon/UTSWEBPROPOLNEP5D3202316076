@@ -1,5 +1,6 @@
 <?php
 include 'config.php';
+require 'send_email.php'; // TAMBAHKAN INI
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -36,7 +37,18 @@ if ($_POST && isset($_POST['request_reset'])) {
     $update->execute([$reset_token, $reset_expires, $user_id]);
     
     $reset_link = $base_url . "/reset_password.php?token=" . $reset_token;
-    $reset_success = true;
+    
+    // KIRIM EMAIL RESET PASSWORD - PERBAIKAN DI SINI
+    $email_result = sendResetPasswordEmail($user['email'], $user['full_name'], $reset_link);
+    
+    if ($email_result['success']) {
+        $reset_success = true;
+        $email_sent = true;
+    } else {
+        $reset_success = true;
+        $email_sent = false;
+        $email_error = $email_result['message'];
+    }
 }
 ?>
 
@@ -184,6 +196,12 @@ if ($_POST && isset($_POST['request_reset'])) {
             background: linear-gradient(135deg, #e3f2fd, #d1ecf1);
             border-color: #b8daff;
             color: #0c5460;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border-color: #ffeaa7;
+            color: #856404;
         }
 
         .info-item {
@@ -418,28 +436,24 @@ if ($_POST && isset($_POST['request_reset'])) {
             font-size: 16px;
         }
 
-        .divider {
-            margin: 20px 0;
-            text-align: center;
-            position: relative;
-            color: #666;
+        .email-status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
             font-size: 12px;
+            text-align: center;
         }
 
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e1e5e9;
+        .email-success {
+            background: #e8f5e8;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
-        .divider span {
-            background: white;
-            padding: 0 10px;
-            position: relative;
+        .email-error {
+            background: #fee;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -481,13 +495,23 @@ if ($_POST && isset($_POST['request_reset'])) {
         <?php endif; ?>
 
         <?php if (isset($reset_success) && $reset_success): ?>
-            <div class="alert alert-info">
-                <i class="fas fa-key"></i> 
-                <div>
-                    <strong>Link Reset Password Berhasil Dibuat!</strong><br>
-                    Link reset password telah dibuat dan berlaku selama 1 jam.
+            <?php if (isset($email_sent) && $email_sent): ?>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> 
+                    <div>
+                        <strong>Email Reset Password Berhasil Dikirim!</strong><br>
+                        Link reset password telah dikirim ke <?php echo $user['email']; ?> dan berlaku selama 1 jam.
+                    </div>
                 </div>
-            </div>
+            <?php else: ?>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <div>
+                        <strong>Link Reset Password Berhasil Dibuat!</strong><br>
+                        Tapi gagal mengirim email. Gunakan link manual di bawah.
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
 
         <div class="profile-grid">
@@ -534,14 +558,21 @@ if ($_POST && isset($_POST['request_reset'])) {
                     <form method="POST">
                         <input type="hidden" name="request_reset" value="1">
                         <button type="submit" class="btn btn-outline">
-                            <i class="fas fa-redo"></i> Buat Link Reset Password
+                            <i class="fas fa-paper-plane"></i> Kirim Link Reset via Email
                         </button>
                     </form>
                     
                     <p style="font-size: 12px; color: #666; margin-top: 10px; text-align: center;">
                         <i class="fas fa-info-circle"></i>
-                        Berguna jika Anda lupa password dan ingin reset via email
+                        Link reset akan dikirim ke email Anda dan berlaku 1 jam
                     </p>
+
+                    <?php if (isset($email_error)): ?>
+                        <div class="email-status email-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Error: <?php echo $email_error; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -593,9 +624,9 @@ if ($_POST && isset($_POST['request_reset'])) {
                     </button>
                 </form>
 
-                <?php if (isset($reset_success) && $reset_success): ?>
+                <?php if (isset($reset_success) && $reset_success && (!isset($email_sent) || !$email_sent)): ?>
                     <div class="reset-info">
-                        <h4><i class="fas fa-link"></i> Link Reset Password</h4>
+                        <h4><i class="fas fa-link"></i> Link Reset Password Manual</h4>
                         <p>Salin link berikut untuk reset password (berlaku 1 jam):</p>
                         <div class="reset-link">
                             <?php echo $reset_link; ?>

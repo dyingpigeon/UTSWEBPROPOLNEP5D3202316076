@@ -1,9 +1,10 @@
 <?php
-// Pastikan tidak ada spasi/karakter baru sebelum <?php
-$host = 'localhost';
-$dbname = 'web_uts_db';
-$username = 'root';
-$password = '';
+require 'env.php'; // Tambahkan ini
+
+$host = Env::get('DB_HOST', 'localhost');
+$dbname = Env::get('DB_NAME', 'web_uts_db');
+$username = Env::get('DB_USERNAME', 'root');
+$password = Env::get('DB_PASSWORD', '');
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -12,11 +13,8 @@ try {
     die("Koneksi database gagal: " . $e->getMessage());
 }
 
-$base_url = 'http://localhost/UTS';
+$base_url = Env::get('BASE_URL', 'http://localhost/UTS');
 
-// Pastikan tidak ada output sebelum session_start()
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-
-// Pastikan tidak ada karakter/spasi setelah ?>

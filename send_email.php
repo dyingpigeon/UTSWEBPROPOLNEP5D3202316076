@@ -1,5 +1,6 @@
 <?php
 require 'vendor/autoload.php';
+require 'env.php'; // Tambahkan ini
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -9,17 +10,20 @@ function sendResetPasswordEmail($to_email, $to_name, $reset_link) {
     $mail = new PHPMailer(true);
     
     try {
-        // Server settings
+        // Server settings - GUNAKAN ENVIRONMENT VARIABLES
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
+        $mail->Host       = Env::get('SMTP_HOST', 'smtp.gmail.com');
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'daheknigg@gmail.com'; // Email Gmail Anda
-        $mail->Password   = 'vxrcsajlnpddtksv';     // App Password
+        $mail->Username   = Env::get('SMTP_USERNAME');
+        $mail->Password   = Env::get('SMTP_PASSWORD');
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Port       = Env::get('SMTP_PORT', 587);
         
-        // Recipients - PERBAIKI: setFrom harus sama dengan username
-        $mail->setFrom('daheknigg@gmail.com', 'Admin Gudang');
+        // Recipients - GUNAKAN ENVIRONMENT VARIABLES
+        $mail->setFrom(
+            Env::get('SMTP_FROM_EMAIL'), 
+            Env::get('SMTP_FROM_NAME', 'Admin Gudang')
+        );
         $mail->addAddress($to_email, $to_name);
         
         // Content
@@ -72,17 +76,20 @@ function sendActivationEmail($to_email, $to_name, $activation_link) {
     $mail = new PHPMailer(true);
     
     try {
-        // Server settings
+        // Server settings - GUNAKAN ENVIRONMENT VARIABLES
         $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
+        $mail->Host       = Env::get('SMTP_HOST', 'smtp.gmail.com');
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'daheknigg@gmail.com'; // Email Gmail Anda
-        $mail->Password   = 'vxrcsajlnpddtksv';     // App Password
+        $mail->Username   = Env::get('SMTP_USERNAME');
+        $mail->Password   = Env::get('SMTP_PASSWORD');
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
+        $mail->Port       = Env::get('SMTP_PORT', 587);
         
-        // Recipients - PERBAIKI: setFrom harus sama dengan username
-        $mail->setFrom('daheknigg@gmail.com', 'Admin Gudang');
+        // Recipients - GUNAKAN ENVIRONMENT VARIABLES
+        $mail->setFrom(
+            Env::get('SMTP_FROM_EMAIL'), 
+            Env::get('SMTP_FROM_NAME', 'Admin Gudang')
+        );
         $mail->addAddress($to_email, $to_name);
         
         // Content
@@ -129,4 +136,3 @@ function sendActivationEmail($to_email, $to_name, $activation_link) {
         return ['success' => false, 'message' => "Gagal mengirim email aktivasi: {$mail->ErrorInfo}"];
     }
 }
-?>
