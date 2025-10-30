@@ -20,4 +20,3 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Pastikan tidak ada karakter/spasi setelah ?>
-?>
